@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Member {
+  id         Int       @id @default(autoincrement())
+  userId     Int?      @unique
+  name       String    @db.VarChar(200)
+  email      String    @unique @db.VarChar(200)
+  phone      String?   @unique
+  joinedDate DateTime
+  lending    Lending[]
+  User       User?     @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+}
+
+model Category {
+  id    Int    @id @default(autoincrement())
+  name  String @db.VarChar(200)
+  books Book[]
+}
+
+model Book {
+  id         Int         @id @default(autoincrement())
+  title      String      @db.VarChar(200)
+  author     String      @db.VarChar(200)
+  quantity   Int
+  categoryId Int
+  isbn       String
+  category   Category    @relation(fields: [categoryId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  bookStatus BookStatus?
+  lending    Lending[]
+}
+
+model BookStatus {
+  id                Int  @id @default(autoincrement())
+  bookId            Int  @unique
+  availableQuantity Int
+  borrowedQuantity  Int
+  book              Book @relation(fields: [bookId], references: [id])
+}
+
+enum BorrowStatus {
+  BORROWED
+  RETURNED
+  MISSING
+}
+
+model Lending {
+  id           Int          @id @default(autoincrement())
+  bookId       Int
+  memberId     Int
+  borrowedDate DateTime
+  dueDate      DateTime
+  status       BorrowStatus @default(BORROWED)
+  createdBy    Int
+  book         Book         @relation(fields: [bookId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  Member       Member       @relation(fields: [memberId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  password String  @db.VarChar(100)
+  name     String  @db.VarChar(200)
+  role     String  @db.VarChar(10)
+  Member   Member?
+}
