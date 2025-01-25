@@ -1,6 +1,13 @@
 import fastify from 'fastify'
 import v1 from './routes/v1'
 import cors from '@fastify/cors'
+import fastifyJwt, { FastifyJwtNamespace } from '@fastify/jwt'
+
+declare module 'fastify' {
+    interface FastifyInstance extends
+    FastifyJwtNamespace<{namespace: 'security'}> {
+    }
+  }
 
 const app = fastify({ logger: true })
 
@@ -8,6 +15,9 @@ export default function build(){
     app.register(cors, {
         origin: false
     })
+    app.register(fastifyJwt, {
+        secret: 'test12345'
+      })
     app.get('/ping', () => {
         return { message:'Success' }
     })

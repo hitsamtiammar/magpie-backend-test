@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyRequest } from "fastify";
 import { prisma } from "prisma";
 import { LIMIT } from "constant";
 import moment from "moment";
+import jwtCheck from "middleware/jwt";
 
 export type MyRequest = FastifyRequest<{
     Querystring: { page?: number}
@@ -17,6 +18,7 @@ export interface ReturnBookRequest{
 }
 
 export default function lending(fastify: FastifyInstance){
+    fastify.addHook('onRequest', jwtCheck);
     fastify.get('/', async (request: MyRequest) => {
         const query = request.query;
         const page = query.page || 1;
@@ -37,7 +39,7 @@ export default function lending(fastify: FastifyInstance){
     
     fastify.post<{
         Body: LendingBookRequest
-    }>('/lend-book', async(request, reply) => {
+    }>('/lend-book', {}, async(request, reply) => {
         const { bookId, memberId } = request.body
         const borrowedDate = moment()
         const dueDate = borrowedDate.clone().add(1,'month')

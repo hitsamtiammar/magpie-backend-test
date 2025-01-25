@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyRequest } from "fastify";
 import { prisma } from "prisma";
 import { LIMIT } from "constant";
+import jwtCheck from "middleware/jwt";
 
 export type GetRequest = FastifyRequest<{
     Querystring: { page?: number}
@@ -19,7 +20,9 @@ export interface PutParams{
 }
 
 export default function books(fastify: FastifyInstance){
-    fastify.get('/', async (request: GetRequest, reply) => {
+    fastify.addHook('onRequest', jwtCheck)
+    fastify.get('/', {
+    },  async (request: GetRequest, reply) => {
         const query = request.query;
         const page = query.page || 1;
         const books = await prisma.book.findMany({
@@ -35,7 +38,7 @@ export default function books(fastify: FastifyInstance){
 
     fastify.post<{
         Body: PostRequest
-    }>('/', async (request) => {
+    }>('/', {  }, async (request) => {
         const { author, categoryId, isbn, quantity, title } = request.body
         const result = await prisma.book.create({
             data: {

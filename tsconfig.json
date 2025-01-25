@@ -10,7 +10,8 @@
     "esModuleInterop": true,
     "paths": {
       "prisma": ["./src/prisma"],
-      "constant": ["./src/constant"]
+      "constant": ["./src/constant"],
+      "middleware/*": ["./src/middleware/*"]
     }
   }
 }
