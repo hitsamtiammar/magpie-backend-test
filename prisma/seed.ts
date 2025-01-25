@@ -31,7 +31,6 @@ async function generateBook(){
         categoryId: categories[Math.floor(Math.random() * categories.length)].id,
         bookStatus: {
           create: {
-            availableQuantity : 0,
             borrowedQuantity: 0
           }
         }
@@ -50,28 +49,16 @@ async function generateMemberUserLending(){
       role: 'admin'
     }
   })
-  const bookCount = await prisma.book.count()
-
 
   for(let i = 0; i < 100; i++){
     const email = faker.internet.email()
     const name = faker.person.fullName()
-    const borrowedDate = faker.date.between({ from: '2024-10-10', to: '2025-01-20' })
-    const dueDate = moment(borrowedDate).add(14,'day')
     await prisma.member.create({
       data: {
         email: email,
         joinedDate: faker.date.past(),
         name: name,
         phone: faker.phone.number(),
-        lending: {
-          create: [{
-            bookId: Math.floor(Math.random() * (bookCount - 1 + 1)) + 1,
-            borrowedDate: borrowedDate,
-            dueDate: dueDate.toDate(),
-            createdBy: admin.id,
-          }]
-        }
       },
       include: {
         lending: true
@@ -79,8 +66,6 @@ async function generateMemberUserLending(){
     })
     
   }
-
-
 }
 
 async function main() {
@@ -90,12 +75,6 @@ async function main() {
   await generateBook()
   await generateMemberUserLending()
 
-  // for (const u of userData) {
-  //   const user = await prisma.user.create({
-  //     data: u,
-  //   })
-  //   console.log(`Created user with id: ${user.id}`)
-  // }
   console.log(`Seeding finished.`)
 }
 

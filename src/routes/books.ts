@@ -46,7 +46,6 @@ export default function books(fastify: FastifyInstance){
                 categoryId,
                 bookStatus: {
                     create: {
-                        availableQuantity: 0,
                         borrowedQuantity: 0
                     }
                 }

@@ -37,11 +37,10 @@ model Book {
 }
 
 model BookStatus {
-  id                Int  @id @default(autoincrement())
-  bookId            Int  @unique
-  availableQuantity Int
-  borrowedQuantity  Int
-  book              Book @relation(fields: [bookId], references: [id])
+  id               Int  @id @default(autoincrement())
+  bookId           Int  @unique
+  borrowedQuantity Int
+  book             Book @relation(fields: [bookId], references: [id])
 }
 
 enum BorrowStatus {
