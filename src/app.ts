@@ -1,15 +1,19 @@
-import fastify, { FastifyInstance } from 'fastify'
+import fastify from 'fastify'
 import v1 from './routes/v1'
+import cors from '@fastify/cors'
 
 const app = fastify({ logger: true })
 
 export default function build(){
-    app.get('/ping', (request) => {
-        return { message:'Success 123' }
+    app.register(cors, {
+        origin: false
+    })
+    app.get('/ping', () => {
+        return { message:'Success' }
     })
     app.register(v1, { prefix: '/v1' })
     app.setErrorHandler((error, request, reply) => {
-        console.log('Error on books', error)
+        console.log('Error happens', error)
         let name = error.name;
         let cause = error.cause;
         let message = error.message
@@ -24,7 +28,7 @@ export default function build(){
             cause: cause,
             message: message
         })
-      })
+    })
 
     return app;
 }

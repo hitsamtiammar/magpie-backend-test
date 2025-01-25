@@ -8,6 +8,7 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
+    "@fastify/cors": "^10.0.2",
     "@prisma/client": "5.22.0",
     "bcrypt": "^5.1.1",
     "fastify": "5.2.1",
