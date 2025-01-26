@@ -2,10 +2,16 @@ import { FastifyInstance, FastifyRequest } from "fastify";
 import { prisma } from "prisma";
 import { LIMIT } from "constant";
 import jwtCheck from "middleware/jwt";
+import moment from "moment";
 
 export type GetRequest = FastifyRequest<{
     Querystring: { page?: number}
 }>
+
+export type GetMonthyRequest = FastifyRequest<{
+    Querystring: { month?: string; year?: string }
+}>
+
 
 export interface PostRequest{
     title: string;
@@ -28,11 +34,86 @@ export default function books(fastify: FastifyInstance){
         const books = await prisma.book.findMany({
             take: LIMIT,
             skip: (page - 1) * LIMIT,
+            include: {
+                category: true
+            }
         })
+        const countBooks = await prisma.book.count()
         return {
             status: true,
             data: books,
+            count: countBooks,
             page,
+        }
+    })
+
+    fastify.get('/most-borrowed-book', async (request: GetMonthyRequest) => {
+        const lending = await prisma.book.findMany({
+            take: 10,
+            orderBy: {
+                lending: {
+                    _count: 'desc'
+                }
+            },
+            include :{
+                _count: {
+                    select: { lending: true }
+                }
+            },
+        })
+        return {
+            status: true,
+            data: lending,
+        }
+    })
+
+    fastify.get('/monthly-lending-trend', async (request: GetMonthyRequest) => {
+        const { month = 'January', year = new Date().getFullYear() } = request.query
+        const mDate = moment(`${year} ${month}`, 'YYYY MMMM')
+        const fDate = mDate.clone().startOf('month')
+        const lDate = mDate.clone().endOf('month')
+        console.log('a', {mDate, fDate, lDate})
+        const lending = await prisma.lending.groupBy({
+            by: ['bookId'],
+            take: 10,
+            _count: {
+                id: true,
+            },
+            where: {
+                status: 'BORROWED',
+                borrowedDate: {
+                    gte: fDate.toDate(),
+                    lte: lDate.toDate()
+                }
+            },
+            orderBy: {
+                _count: {
+                    id: 'desc'
+                }
+            }
+        })
+        const bookLendings = await prisma.lending.findMany({
+            include: {
+                book: true
+            },
+            where: {
+                bookId: {
+                    in: lending.map(item => item.bookId)
+                }
+            }
+        })
+        const booksMap = lending.map(lend => {
+            const bookLending = bookLendings.find(book => lend.bookId === book.bookId)
+            return {
+                id: bookLending?.id,
+                bookName: bookLending?.book.title,
+                countLend: lend?._count.id || 0,
+                borrowDate: bookLending?.borrowedDate
+            }
+        })
+        return {
+            status: true,
+            data: booksMap
         }
     })
 

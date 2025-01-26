@@ -30,9 +30,11 @@ export default function lending(fastify: FastifyInstance){
                 Member: true
             }
         })
+        const countLending = await prisma.lending.count()
         return {
             status: true,
             data: lending,
+            count: countLending,
             page,
         }
     })
