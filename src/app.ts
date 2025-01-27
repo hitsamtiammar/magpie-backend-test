@@ -13,7 +13,7 @@ const app = fastify({ logger: true })
 
 export default function build(){
     app.register(cors, {
-        origin: false
+        origin: "*",
     })
     app.register(fastifyJwt, {
         secret: 'test12345'

@@ -5,7 +5,7 @@ import jwtCheck from "middleware/jwt";
 import moment from "moment";
 
 export type GetRequest = FastifyRequest<{
-    Querystring: { page?: number}
+    Querystring: { page?: number; search?: string}
 }>
 
 export type GetMonthyRequest = FastifyRequest<{
@@ -31,18 +31,33 @@ export default function books(fastify: FastifyInstance){
     },  async (request: GetRequest, reply) => {
         const query = request.query;
         const page = query.page || 1;
+        let where = {};
+        if(query.search){
+            where = {
+                ...where,
+                title: {
+                    mode: 'insensitive',
+                    contains: `%${query.search}%`,
+                }
+            }
+        }
         const books = await prisma.book.findMany({
             take: LIMIT,
             skip: (page - 1) * LIMIT,
+            where,
             include: {
                 category: true
             }
         })
-        const countBooks = await prisma.book.count()
+        const countBooks = await prisma.book.count({
+            where
+        })
+        const totalPage = Math.ceil(countBooks / 10)
         return {
             status: true,
             data: books,
             count: countBooks,
+            totalPage,
             page,
         }
     })
