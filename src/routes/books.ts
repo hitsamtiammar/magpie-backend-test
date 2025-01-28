@@ -3,9 +3,10 @@ import { prisma } from "prisma";
 import { LIMIT } from "constant";
 import jwtCheck from "middleware/jwt";
 import moment from "moment";
+import { Prisma } from "@prisma/client";
 
 export type GetRequest = FastifyRequest<{
-    Querystring: { page?: number; search?: string}
+    Querystring: { page?: number; search?: string; showAll?:string }
 }>
 
 export type GetMonthyRequest = FastifyRequest<{
@@ -27,11 +28,15 @@ export interface PutParams{
 
 export default function books(fastify: FastifyInstance){
     fastify.addHook('onRequest', jwtCheck)
-    fastify.get('/', {
-    },  async (request: GetRequest, reply) => {
+    fastify.get('/',  async (request: GetRequest, reply) => {
         const query = request.query;
         const page = query.page || 1;
         let where = {};
+        let orderBy: Prisma.BookOrderByWithRelationInput =  { id: 'desc' }
+        let takeLimit:object = {
+            take: LIMIT,
+            skip: (page - 1) * LIMIT
+        }
         if(query.search){
             where = {
                 ...where,
@@ -40,13 +45,25 @@ export default function books(fastify: FastifyInstance){
                     contains: `%${query.search}%`,
                 }
             }
+        } 
+
+        if(query.showAll && query.showAll === 'true'){
+            orderBy = {
+                title: 'asc'
+            }
+            takeLimit = {}
         }
         const books = await prisma.book.findMany({
-            take: LIMIT,
-            skip: (page - 1) * LIMIT,
+            ...takeLimit,
+            orderBy: orderBy,
             where,
             include: {
-                category: true
+                _count: {
+                    select: {
+                        lending: true
+                    }
+                },
+                category: true,
             }
         })
         const countBooks = await prisma.book.count({
@@ -62,9 +79,17 @@ export default function books(fastify: FastifyInstance){
         }
     })
 
+    fastify.get('/categories', async() => {
+        const categories = await prisma.category.findMany()
+        return {
+            status: true,
+            data: categories,
+        }
+    })  
+
     fastify.get('/most-borrowed-book', async (request: GetMonthyRequest) => {
         const lending = await prisma.book.findMany({
-            take: 10,
+            take: 5,
             orderBy: {
                 lending: {
                     _count: 'desc'
@@ -78,7 +103,14 @@ export default function books(fastify: FastifyInstance){
         })
         return {
             status: true,
-            data: lending,
+            data: lending.map((item) => {
+                const countLending = item._count.lending
+                 return {
+                    id: item.id,
+                    title: item.title,
+                    countLending
+                }
+            }),
         }
     })
 

@@ -5,7 +5,7 @@ import moment from "moment";
 import jwtCheck from "middleware/jwt";
 
 export type MyRequest = FastifyRequest<{
-    Querystring: { page?: number}
+    Querystring: { page?: number; search?: string }
 }>
 
 export interface LendingBookRequest{
@@ -22,19 +22,41 @@ export default function lending(fastify: FastifyInstance){
     fastify.get('/', async (request: MyRequest) => {
         const query = request.query;
         const page = query.page || 1;
+
+        let where = {};
+        if(query.search){
+            where = {
+                ...where,
+                Member: {
+                    name: {
+                        mode: 'insensitive',
+                        contains: `%${query.search}%`,
+                    }
+                }
+            }
+        }
+
         const lending = await prisma.lending.findMany({
+            orderBy: {
+                id: 'desc'
+            },
             take: LIMIT,
             skip: (page - 1) * LIMIT,
             include: {
                 book: true,
                 Member: true
-            }
+            },
+            where
         })
-        const countLending = await prisma.lending.count()
+        const countLending = await prisma.lending.count({
+            where
+        })
+        const totalPage = Math.ceil(countLending / 10)
         return {
             status: true,
             data: lending,
             count: countLending,
+            totalPage,
             page,
         }
     })
