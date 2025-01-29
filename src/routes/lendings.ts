@@ -64,6 +64,7 @@ export default function lending(fastify: FastifyInstance){
     fastify.post<{
         Body: LendingBookRequest
     }>('/lend-book', {}, async(request, reply) => {
+
         const { bookId, memberId } = request.body
         const borrowedDate = moment()
         const dueDate = borrowedDate.clone().add(1,'month')

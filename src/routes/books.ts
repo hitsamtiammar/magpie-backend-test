@@ -31,7 +31,7 @@ export default function books(fastify: FastifyInstance){
     fastify.get('/',  async (request: GetRequest, reply) => {
         const query = request.query;
         const page = query.page || 1;
-        let where = {};
+        let where: Prisma.BookWhereInput = {};
         let orderBy: Prisma.BookOrderByWithRelationInput =  { id: 'desc' }
         let takeLimit:object = {
             take: LIMIT,
