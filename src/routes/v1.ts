@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import books from "./books";
-import lending from "./lendings";
+import lending from "./lending";
 import home from "./home";
 import members from "./member";
 
