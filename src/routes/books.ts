@@ -6,7 +6,13 @@ import moment from "moment";
 import { Prisma } from "@prisma/client";
 
 export type GetRequest = FastifyRequest<{
-    Querystring: { page?: number; search?: string; showAll?:string }
+    Querystring: { 
+        page?: number;
+        search?: string;
+        showAll?:string;
+        quantity?: number;
+        categoryId?: number;
+    }
 }>
 
 export type GetMonthyRequest = FastifyRequest<{
@@ -28,7 +34,7 @@ export interface PutParams{
 
 export default function books(fastify: FastifyInstance){
     fastify.addHook('onRequest', jwtCheck)
-    fastify.get('/',  async (request: GetRequest, reply) => {
+    fastify.get('/',  async (request: GetRequest) => {
         const query = request.query;
         const page = query.page || 1;
         let where: Prisma.BookWhereInput = {};
@@ -45,7 +51,23 @@ export default function books(fastify: FastifyInstance){
                     contains: `%${query.search}%`,
                 }
             }
-        } 
+        }
+
+        if(query.quantity){
+            where = {
+                ...where,
+                quantity: {
+                    gte: Number(query.quantity)
+                }
+            }
+        }
+
+        if(query.categoryId){
+            where = {
+                ...where,
+                categoryId: Number(query.categoryId)
+            }
+        }
 
         if(query.showAll && query.showAll === 'true'){
             orderBy = {
