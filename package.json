@@ -6,7 +6,8 @@
     "dev": "ts-node-dev -r tsconfig-paths/register src/index.ts",
     "start": "ts-node src/index.ts",
     "seed": "ts-node prisma/seed.ts",
-    "test": "jest"
+    "test": "jest",
+    "migrate": "prisma migrate dev && npm run seed"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.2",
