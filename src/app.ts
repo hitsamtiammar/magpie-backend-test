@@ -1,6 +1,8 @@
 import fastify from 'fastify'
 import v1 from './routes/v1'
 import cors from '@fastify/cors'
+import fastifySwagger from '@fastify/swagger'
+import fastifySwaggerUi from '@fastify/swagger-ui'
 import fastifyJwt, { FastifyJwtNamespace } from '@fastify/jwt'
 
 declare module 'fastify' {
@@ -18,6 +20,22 @@ export default function build(){
     app.register(fastifyJwt, {
         secret: 'test12345'
       })
+    app.register(fastifySwagger)
+    app.register(fastifySwaggerUi, {
+        routePrefix: '/documentation',
+        uiConfig: {
+          docExpansion: 'list',
+          deepLinking: false
+        },
+        uiHooks: {
+          onRequest: function (request, reply, next) { next() },
+          preHandler: function (request, reply, next) { next() }
+        },
+        staticCSP: true,
+        transformStaticCSP: (header) => header,
+        transformSpecification: (swaggerObject, request, reply) => { return swaggerObject },
+        transformSpecificationClone: true
+    })
     app.get('/ping', () => {
         return { message:'Success' }
     })

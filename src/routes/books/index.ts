@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyRequest } from "fastify";
+
 import jwtCheck from "middleware/jwt";
 import getBooks from "./get-books";
 import getCategories from "./get-categories";
@@ -7,20 +8,28 @@ import getMonthlyLendingTrend from "./get-monthly-lending-trend";
 import createBook, { PostRequest } from "./create-book";
 import updateBook, { PutParams } from "./update-book";
 import deleteBook from "./delete-book";
+import {
+    createBookSchema,
+    getBooksSchema,
+    getCategoriesSchema,
+    getMostBorrowedBookSchema,
+    getMonthlyLendingTrendSchema,
+    updateBookSchema,
+    deleteBookSchema
+} from "./schema";
+
+export interface UpdateBookSchema{
+    Params: PutParams,
+    Body: PostRequest
+}
 
 export default function books(fastify: FastifyInstance){
     fastify.addHook('onRequest', jwtCheck)
-    fastify.get('/',  getBooks)
-    fastify.get('/categories', getCategories)  
-    fastify.get('/most-borrowed-book', getMostBorrowedBook)
-    fastify.get('/monthly-lending-trend', getMonthlyLendingTrend)
-    fastify.post<{ Body: PostRequest }>('/', createBook)
-    fastify.put<{
-        Params: PutParams,
-        Body: PostRequest
-    }>('/:id', updateBook)
-    fastify.delete<{
-        Params: PutParams
-    }>('/:id', deleteBook)
-
+    fastify.get('/', getBooksSchema,  getBooks)
+    fastify.get('/categories', getCategoriesSchema, getCategories)  
+    fastify.get('/most-borrowed-book', getMostBorrowedBookSchema, getMostBorrowedBook)
+    fastify.get('/monthly-lending-trend', getMonthlyLendingTrendSchema, getMonthlyLendingTrend)
+    fastify.post<{ Body: PostRequest }>('/', createBookSchema, createBook)
+    fastify.put<UpdateBookSchema>('/:id', updateBookSchema, updateBook)
+    fastify.delete<{ Params: PutParams }>('/:id', deleteBookSchema,  deleteBook)
 }
